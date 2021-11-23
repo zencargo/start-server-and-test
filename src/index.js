@@ -65,7 +65,12 @@ function waitAndRun ({ start, url, runFn }) {
         })
         .then(() => {
           debug('stopping server')
-          server.kill()
+          return new Promise((resolve, reject) => {
+            server.kill('SIGINT', { forceKillAfterTimeout: 10000 })
+            server.on('exit', () => {
+              resolve()
+            })
+          })
         })
     }
   }
