@@ -51,6 +51,7 @@ function waitAndRun ({ start, url, runFn }) {
           debug('stopping child processes')
           children.forEach(child => {
             try {
+              debug('stopping child %o', child)
               process.kill(child.PID, 'SIGINT')
             } catch (e) {
               if (e.code === 'ESRCH') {
@@ -58,15 +59,15 @@ function waitAndRun ({ start, url, runFn }) {
                   `Child process ${child.PID} exited before trying to stop it`
                 )
               } else {
-                throw e
+                console.log('Error when closing child process:', JSON.stringify(child))
               }
             }
           })
         })
         .then(() => {
           debug('stopping server')
-          return new Promise((resolve, reject) => {
-            server.kill('SIGTERM', { forceKillAfterTimeout: 10000 })
+          return new Promise((resolve) => {
+            server.kill('SIGINT', { forceKillAfterTimeout: 10000 })
             server.on('exit', () => {
               resolve()
             })
@@ -94,8 +95,7 @@ function waitAndRun ({ start, url, runFn }) {
       headers: {
         Accept: 'text/html, application/json, text/plain, */*'
       },
-      validateStatus: status =>
-        (status >= 200 && status < 300) || status === 304
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 304,
     }
     debug('wait-on options %o', options)
 
